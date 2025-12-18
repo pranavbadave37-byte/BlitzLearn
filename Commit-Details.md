@@ -1,1 +1,0 @@
-Commit 1 - Designed a basic HTML template for the app. 
