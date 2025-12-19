@@ -68,6 +68,7 @@ async function processContent() {
     const outcomes = document.getElementById('course-outcomes').value;
     const bloomLevel = document.getElementById('bloom-level').value;
     const processBtn = document.querySelector('.sidebar button');
+    const weightage = document.getElementById('topic-weightage').value;
     
     if (fileInput.files.length === 0) {
         alert("Please select at least one PDF file.");
@@ -84,6 +85,7 @@ async function processContent() {
     formData.append('yt_url', ytUrl);
     formData.append('course_outcomes', outcomes);
     formData.append('bloom_level', bloomLevel);
+    formData.append('weightage', weightage);
 
     try {
         const response = await fetch('/process', { method: 'POST', body: formData });

@@ -18,6 +18,7 @@ vector_store = None
 session_context = {
     "course_outcomes": "",
     "bloom_level": "Understand",
+    "weightage": "",
     "yt_url": ""
 }
 
@@ -40,18 +41,22 @@ def get_vector_store(text_chunks):
     store = FAISS.from_texts(text_chunks, embedding=embeddings)
     return store
 
-def get_conversational_chain(bloom_level, outcomes):
+def get_conversational_chain(bloom_level, outcomes, weightage):
     prompt_template = f"""
     You are an academic tutor. Answer the question based on the provided context, 
-    keeping the learner's Goal and Cognitive Level in mind.
+    keeping the learner's Goal, Cognitive Level, and Topic Weightage in mind.
 
     Learner's Course Outcomes: {outcomes}
     Target Bloom's Taxonomy Level: {bloom_level}
+    Topic Weightage in Exam: {weightage} marks
 
     Instructions:
     1. Use the provided context to answer.
     2. Adjust your explanation style to match the Bloom's Level (e.g., 'Analyze' should compare/contrast, 'Remember' should define).
-    3. If the answer is not in the context, say: "I can't find the answer in the notes."
+    3. For higher weightage topics ({weightage} marks), provide more comprehensive explanations with examples and detailed coverage.
+    4. For lower weightage topics, keep explanations concise but complete.
+    5. If the answer is not in the context, say: "I can't find the answer in the notes.
+    6. Its an Indian College Exam, so be extra careful about the content. Indian professors love huge contents"
 
     Context:
     {{context}}
@@ -85,6 +90,7 @@ def process_content():
     yt_url = request.form.get("yt_url", "")
     outcomes = request.form.get("course_outcomes", "")
     bloom_index = request.form.get("bloom_level", "2")
+    weightage = request.form.get('weightage', "4")
     
     bloom_map = {
         "1": "Remember (Define, list, memorize)",
@@ -97,6 +103,7 @@ def process_content():
     
     session_context["course_outcomes"] = outcomes
     session_context["bloom_level"] = bloom_map.get(bloom_index, "Understand")
+    session_context["weightage"] = weightage
     session_context["yt_url"] = yt_url
 
     if not pdf_files or pdf_files[0].filename == '':
@@ -124,7 +131,8 @@ def ask_question():
     
     chain = get_conversational_chain(
         session_context["bloom_level"], 
-        session_context["course_outcomes"]
+        session_context["course_outcomes"],
+        session_context["weightage"]
     )
     
     response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
