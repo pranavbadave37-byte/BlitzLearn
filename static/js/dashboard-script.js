@@ -67,16 +67,22 @@ async function processContent() {
     const ytUrl = document.getElementById('yt-url').value;
     const outcomes = document.getElementById('course-outcomes').value;
     const bloomLevel = document.getElementById('bloom-level').value;
-    const processBtn = document.querySelector('.sidebar button');
     const weightage = document.getElementById('topic-weightage').value;
+    const processBtn = document.querySelector('.sidebar button');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
     
     if (fileInput.files.length === 0) {
-        alert("Please select at least one PDF file.");
+        showProgressMessage('Please select at least one PDF file.', 'error');
         return;
     }
 
     processBtn.textContent = "Processing...";
     processBtn.disabled = true;
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Uploading files...';
 
     const formData = new FormData();
     for (const file of fileInput.files) {
@@ -87,16 +93,58 @@ async function processContent() {
     formData.append('bloom_level', bloomLevel);
     formData.append('weightage', weightage);
 
+    progressBar.style.width = '30%';
+    progressText.textContent = 'Extracting text from PDFs...';
+
     try {
+        setTimeout(() => {
+            progressBar.style.width = '60%';
+            progressText.textContent = 'Creating embeddings...';
+        }, 500);
+
         const response = await fetch('/process', { method: 'POST', body: formData });
         const data = await response.json();
-        alert(data.message || data.error);
+        
+        progressBar.style.width = '100%';
+        progressText.textContent = data.message || 'Processing complete!';
+        progressText.style.color = '#10b981';
+        
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            progressText.style.color = '';
+        }, 2000);
+        
     } catch (error) {
-        alert("Failed to process content.");
+        progressBar.style.width = '100%';
+        progressBar.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+        progressText.textContent = 'Failed to process content. Please try again.';
+        progressText.style.color = '#ef4444';
+        
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            progressBar.style.background = '';
+            progressText.style.color = '';
+        }, 3000);
     } finally {
         processBtn.textContent = "Process Content";
         processBtn.disabled = false;
     }
+}
+
+function showProgressMessage(message, type) {
+    const progressContainer = document.getElementById('progress-container');
+    const progressText = document.getElementById('progress-text');
+    const progressBar = document.getElementById('progress-bar');
+    
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = message;
+    progressText.style.color = type === 'error' ? '#ef4444' : '#10b981';
+    
+    setTimeout(() => {
+        progressContainer.style.display = 'none';
+        progressText.style.color = '';
+    }, 3000);
 }
 
 async function askQuestion() {
