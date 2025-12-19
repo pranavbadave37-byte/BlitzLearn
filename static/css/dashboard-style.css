@@ -373,3 +373,21 @@ header h1 {
     margin-top: 6px;
     font-weight: 500;
 }
+
+.profile-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    cursor: default;
+}
+
+body.dark .profile-circle {
+    border-color: #333;
+}

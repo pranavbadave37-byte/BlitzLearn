@@ -1,3 +1,63 @@
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        window.location.href = '/'; 
+    }
+});
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Authenticating...';
+
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch (error) {
+        alert("Login Error: " + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login';
+    }
+}
+
+async function handleSignup(e) {
+    e.preventDefault();
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const confirm = document.getElementById('signup-confirm-password').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
+    if (password !== confirm) {
+        document.getElementById('signup-confirm-error').classList.add('show');
+        return;
+    }
+    document.getElementById('signup-confirm-error').classList.remove('show');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating Account...';
+
+    try {
+        await auth.createUserWithEmailAndPassword(email, password);
+    } catch (error) {
+        alert("Signup Error: " + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
+    }
+}
+
+async function handleSocialLogin(provider) {
+    if (provider === 'Google') {
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        try {
+            await auth.signInWithPopup(googleProvider);
+        } catch (error) {
+            alert("Google Login Error: " + error.message);
+        }
+    }
+}
+
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     if (savedTheme === 'dark') {
@@ -14,6 +74,7 @@ function toggleTheme() {
 
 function updateThemeIcon(isDark) {
     const iconPath = document.getElementById('sun-icon');
+    if (!iconPath) return;
     if (isDark) {
         iconPath.setAttribute('d', 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z');
     } else {
@@ -47,60 +108,14 @@ function togglePassword(inputId) {
     input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-async function handleLogin(e) {
-    e.preventDefault();
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Logging in...';
-    setTimeout(() => {
-        submitBtn.textContent = 'Success!';
-        submitBtn.style.background = 'var(--success)';
-        setTimeout(() => {
-            alert("Login Successful!");
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Login';
-            submitBtn.style.background = '';
-        }, 500);
-    }, 1500);
-}
-
-async function handleSignup(e) {
-    e.preventDefault();
-    const password = document.getElementById('signup-password').value;
-    const confirm = document.getElementById('signup-confirm-password').value;
-    const errorMsg = document.getElementById('signup-confirm-error');
-
-    if (password !== confirm) {
-        errorMsg.classList.add('show');
-        return;
-    }
-    errorMsg.classList.remove('show');
-
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Creating Account...';
-
-    setTimeout(() => {
-        submitBtn.textContent = 'Account Created!';
-        submitBtn.style.background = 'var(--success)';
-        setTimeout(() => {
-            alert("Sign up complete!");
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Create Account';
-            submitBtn.style.background = '';
-            switchTab('login');
-        }, 800);
-    }, 1500);
-}
-
-function handleSocialLogin(provider) {
-    alert(`Redirecting to ${provider} authentication...`);
-}
-
 function handleForgotPassword(e) {
     e.preventDefault();
     const email = prompt("Enter your email:");
-    if (email) alert(`Reset link sent to ${email}`);
+    if (email) {
+        auth.sendPasswordResetEmail(email)
+            .then(() => alert("Reset link sent!"))
+            .catch(err => alert(err.message));
+    }
 }
 
 initTheme();

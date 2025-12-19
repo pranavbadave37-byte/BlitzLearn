@@ -1,6 +1,32 @@
+firebase.auth().onAuthStateChanged(user => {
+    if (!user) {
+        window.location.href = '/login';
+    } else {
+        console.log("Active Session:", user.email);
+        
+        const photoEl = document.getElementById('user-photo');
+        const initialEl = document.getElementById('user-initial');
+        
+        if (user.photoURL) {
+            photoEl.src = user.photoURL;
+            photoEl.style.display = 'block';
+            initialEl.style.display = 'none';
+        } else {
+            initialEl.textContent = user.email.charAt(0).toUpperCase();
+            photoEl.style.display = 'none';
+            initialEl.style.display = 'block';
+        }
+    }
+});
+
+function logout() {
+    firebase.auth().signOut().then(() => {
+        window.location.href = '/login';
+    }).catch(err => alert("Error logging out"));
+}
+
 if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark');
-    updateThemeIcon();
 }
 
 function toggleTheme() {
@@ -11,13 +37,15 @@ function toggleTheme() {
 }
 
 function updateThemeIcon() {
-    const iconPath = document.getElementById('switch-icon');
+    const icon = document.getElementById('theme-icon'); 
     const isDark = document.body.classList.contains('dark');
     
-    if (isDark) {
-        iconPath.setAttribute('d', 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z');
-    } else {
-        iconPath.setAttribute('d', 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z');
+    if (icon) {
+        if (isDark) {
+            icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        } else {
+            icon.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
+        }
     }
 }
 
@@ -25,12 +53,7 @@ function updateFileCount() {
     const fileInput = document.getElementById('pdf-upload');
     const fileCount = document.getElementById('file-count');
     const count = fileInput.files.length;
-    
-    if (count > 0) {
-        fileCount.textContent = `${count} file${count > 1 ? 's' : ''} selected`;
-    } else {
-        fileCount.textContent = '';
-    }
+    fileCount.textContent = count > 0 ? `${count} file${count > 1 ? 's' : ''} selected` : '';
 }
 
 async function processContent() {
@@ -38,7 +61,7 @@ async function processContent() {
     const ytUrl = document.getElementById('yt-url').value;
     const outcomes = document.getElementById('course-outcomes').value;
     const bloomLevel = document.getElementById('bloom-level').value;
-    const processBtn = event.target;
+    const processBtn = document.querySelector('.sidebar button');
     
     if (fileInput.files.length === 0) {
         alert("Please select at least one PDF file.");
@@ -57,14 +80,10 @@ async function processContent() {
     formData.append('bloom_level', bloomLevel);
 
     try {
-        const response = await fetch('/process', {
-            method: 'POST',
-            body: formData
-        });
+        const response = await fetch('/process', { method: 'POST', body: formData });
         const data = await response.json();
         alert(data.message || data.error);
     } catch (error) {
-        console.error("Error:", error);
         alert("Failed to process content.");
     } finally {
         processBtn.textContent = "Process Content";
@@ -79,7 +98,6 @@ async function askQuestion() {
     const query = input.value.trim();
 
     if (!query) return;
-
     if (placeholder) placeholder.remove();
 
     chatBox.innerHTML += `<div class="message user-message">${query}</div>`;
@@ -93,12 +111,10 @@ async function askQuestion() {
             body: JSON.stringify({ question: query })
         });
         const data = await response.json();
-        
         chatBox.innerHTML += `<div class="message ai-message">${data.answer}</div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
     } catch (error) {
-        console.error("Error:", error);
-        chatBox.innerHTML += `<div class="message ai-message">Error: Could not connect to server.</div>`;
+        chatBox.innerHTML += `<div class="message ai-message">Error connecting to server.</div>`;
     }
 }
 

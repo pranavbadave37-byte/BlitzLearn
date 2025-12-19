@@ -73,6 +73,10 @@ def get_conversational_chain(bloom_level, outcomes):
 def index():
     return render_template('index.html')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
 @app.route('/process', methods=['POST'])
 def process_content():
     global vector_store, session_context
