@@ -94,7 +94,7 @@ def process_content():
     outcomes = request.form.get("course_outcomes", "")
     bloom_index = request.form.get("bloom_level", "2")
     weightage = request.form.get('weightage', "4")
-    language = request.form.get('language', "English")
+    language = request.form.get('language', "")
     
     bloom_map = {
         "1": "Remember (Define, list, memorize)",
