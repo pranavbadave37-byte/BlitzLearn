@@ -20,8 +20,10 @@ session_context = {
     "bloom_level": "Understand",
     "weightage": "",
     "language": "",
-    "yt_url": ""
-}
+    "yt_url": "",
+    "study_mode": "normal",
+    "vibe_type": "default"
+}   
 
 def get_pdf_text(pdf_files):
     text = ""
@@ -42,24 +44,72 @@ def get_vector_store(text_chunks):
     store = FAISS.from_texts(text_chunks, embedding=embeddings)
     return store
 
-def get_conversational_chain(bloom_level, outcomes, weightage, language):
-    prompt_template = f"""
+def get_conversational_chain(bloom_level, outcomes, weightage, language, study_mode="normal", vibe_type="default"):
+
+    base_instruction = """
     You are an academic tutor. Answer the question based on the provided context, 
     keeping the learner's Goal, Cognitive Level, and Topic Weightage in mind.
+    """
+    
+    if study_mode == "professor":
+        language = "English"
+        mode_instruction = """
+        PROFESSOR MODE: Provide highly technical, academically rigorous answers. 
+        Use formal academic language, include technical terminology, cite concepts precisely, 
+        and structure answers as a professor would in an exam setting. 
+        Focus on conceptual clarity, theoretical depth, and exam-oriented explanations.
+        Include relevant formulas, theorems, or technical details where applicable.
+        """
+    elif study_mode == "vibe":
+        if vibe_type == "mumbai":
+            language = "Hinglish (Mumbai slang)"
+            mode_instruction = """
+            MUMBAI CHA BHAI MODE: Talk like a cool Mumbai friend explaining concepts. 
+            Use Mumbai slang naturally - words like 'bhai', 'bhidu', 'ekdum', 'bindaas', 
+            'mast', 'apun', 'tapri', 'cutting', 'funda', 'scene', etc.
+            Keep it casual but informative. Make learning fun and relatable like a friend 
+            teaching another friend. Example: "Arre bhidu, yeh concept ekdum simple hai..."
+            """
+        elif vibe_type == "hyderabadi":
+            language = "Hinglish (Hyderabadi slang)"
+            mode_instruction = """
+            HYDERABADI MIA MODE: Explain concepts in Hyderabadi style. 
+            Use Hyderabadi slang naturally - words like 'mia', 'nakko', 'hau', 'kya baat hai', 
+            'baigan', 'potti', 'kiraak', 'scene kya hai', 'dimaag ka dahi', etc.
+            Keep it friendly and conversational. Example: "Arre mia, yeh topic toh ekdum kiraak hai..."
+            """
+        else:  
+            language = "Hinglish"
+            mode_instruction = """
+            HINGLISH MODE: Explain in a mix of Hindi and English (Hinglish). 
+            Use casual, friendly language that Indians commonly use. 
+            Mix Hindi and English naturally like friends talking. 
+            Example: "Dekho, yeh concept basically yeh hai ki..."
+            """
+    else:  
+        mode_instruction = """
+        NORMAL MODE: Provide clear, comprehensive answers in the user's preferred language.
+        Balance between being informative and accessible.
+        """
+    
+    prompt_template = f"""
+    {base_instruction}
+    
+    {mode_instruction}
 
     Learner's Course Outcomes: {outcomes}
     Target Bloom's Taxonomy Level: {bloom_level}
     Topic Weightage in Exam: {weightage} marks
-    Preferred output language: {language}
-    ** Strictly give the text output in the preferred language
-
+    Response Language/Style: {language}
+    
     Instructions:
     1. Use the provided context to answer.
     2. Adjust your explanation style to match the Bloom's Level (e.g., 'Analyze' should compare/contrast, 'Remember' should define).
     3. For higher weightage topics ({weightage} marks), provide more comprehensive explanations with examples and detailed coverage.
     4. For lower weightage topics, keep explanations concise but complete.
-    5. If the answer is not in the context, say: "I can't find the answer in the notes.
-    6. Its an Indian College Exam, so be extra careful about the content. Indian professors love huge contents"
+    5. If the answer is not in the context, say: "I can't find the answer in the notes."
+    6. It's an Indian College Exam, so be extra careful about the content. Indian professors love detailed content.
+    7. Maintain the specified language/style consistently throughout your response.
 
     Context:
     {{context}}
@@ -69,6 +119,7 @@ def get_conversational_chain(bloom_level, outcomes, weightage, language):
 
     Answer:
     """
+    
     model = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash", 
         google_api_key=api_key, 
@@ -142,11 +193,31 @@ def ask_question():
         session_context["bloom_level"], 
         session_context["course_outcomes"],
         session_context["weightage"],
-        session_context["language"]
+        session_context["language"],
+        session_context["study_mode"],
+        session_context["vibe_type"]
     )
     
     response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
     return jsonify({"answer": response["output_text"]})
+
+
+@app.route('/mode-change', methods=['POST'])
+def mode_change():
+    global session_context
+    
+    data = request.json
+    study_mode = data.get("study_mode", "normal")
+    vibe_type = data.get("vibe_type", "default")
+    
+    session_context["study_mode"] = study_mode
+    session_context["vibe_type"] = vibe_type
+    
+    return jsonify({
+        "message": f"Mode changed to {study_mode}",
+        "study_mode": study_mode,
+        "vibe_type": vibe_type
+    })
 
 @app.route('/prioritize_topics', methods=['POST'])
 def prioritize_topics():

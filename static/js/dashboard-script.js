@@ -316,17 +316,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function setStudyMode() {
+async function setStudyMode() {
     const selectedMode = document.querySelector('input[name="study-mode"]:checked').value;
-    let modeMessage = 'Study mode set to: ' + selectedMode;
+    let vibeType = 'default';
     
     if (selectedMode === 'vibe') {
-        const vibeType = document.getElementById('vibe-select').value;
-        modeMessage += ' (' + document.getElementById('vibe-select').options[document.getElementById('vibe-select').selectedIndex].text + ')';
+        vibeType = document.getElementById('vibe-select').value;
     }
     
-    console.log(modeMessage);
-    alert(modeMessage);
+    try {
+        const response = await fetch('/mode-change', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                study_mode: selectedMode,
+                vibe_type: vibeType
+            })
+        });
+        
+        const data = await response.json();
+        
+        let modeMessage = 'Study mode set to: ' + selectedMode;
+        if (selectedMode === 'vibe') {
+            const vibeText = document.getElementById('vibe-select').options[document.getElementById('vibe-select').selectedIndex].text;
+            modeMessage += ' (' + vibeText + ')';
+        }
+        
+        console.log(data);
+        alert(modeMessage);
+        
+    } catch (error) {
+        console.error('Error setting mode:', error);
+        alert('Failed to set mode. Please try again.');
+    }
 }
 
 function toggleDropdown3() {
