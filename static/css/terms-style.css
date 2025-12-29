@@ -354,6 +354,13 @@ header h1 {
     .contact-section p {
         font-size: 14px;
     }
+
+    #custom-cursor {
+        display: none !important;
+    }
+    body {
+        cursor: default;
+    }
 }
 
 @media (max-width: 480px) {
@@ -487,4 +494,17 @@ header h1 {
     .terms-section li {
         font-size: 12px;
     }
+}
+
+#custom-cursor {
+    position: fixed;
+    width: 1rem; 
+    height: 1rem;
+    background-color: #7845c0; 
+    border-radius: 9999px;
+    pointer-events: none; 
+    z-index: 9999;
+    mix-blend-mode: difference; 
+    transition: transform 0.2s ease-out, background-color 0.2s ease-out; 
+    transform: translate(-50%, -50%) scale(1); 
 }

@@ -438,4 +438,26 @@ function getSelectedTopics() {
     return Array.from(checkboxes).map(cb => cb.value);
 }
 
+const customCursor = document.getElementById('custom-cursor');
+
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+if (!isTouchDevice) {
+    document.addEventListener('mousemove', (e) => {
+        customCursor.style.left = `${e.clientX}px`;
+        customCursor.style.top = `${e.clientY}px`;
+
+        const target = e.target;
+        const isInteractive = target.tagName === 'A' || target.tagName === 'BUTTON' || target.closest('a') || target.closest('button') || target.closest('.shadow-md');
+
+        if (isInteractive) {
+            customCursor.style.transform = 'translate(-50%, -50%) scale(2.2)'; 
+            customCursor.style.backgroundColor = 'white'; 
+        } else {
+            customCursor.style.transform = 'translate(-50%, -50%) scale(1)'; 
+            customCursor.style.backgroundColor = '#10B981'; 
+        }
+    });
+}
+
 updateThemeIcon();  
