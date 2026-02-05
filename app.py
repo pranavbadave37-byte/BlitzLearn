@@ -305,6 +305,9 @@ def prioritize_topics():
     except Exception as e:
         print(f"Error in prioritize_topics: {str(e)}")
         return jsonify({"error": "Failed to prioritize topics. Please try again."}), 500
+@app.route("/health")
+def health():
+    return "OK", 200
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False, port=5000, host='0.0.0.0')
